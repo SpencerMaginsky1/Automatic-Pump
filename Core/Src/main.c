@@ -64,17 +64,6 @@ static void MX_TIM1_Init(void);
 TIM_HandleTypeDef htim1;
 I2C_HandleTypeDef hi2c1;
 
-// Define start and stop times for two intervals
-//#define START_HOUR_1   8   // Start hour for interval 1
-//#define START_MINUTE_1 0   // Start minute for interval 1
-//#define STOP_HOUR_1    8   // Stop hour for interval 1
-//#define STOP_MINUTE_1  10  // Stop minute for interval 1
-//
-//#define START_HOUR_2   22  // Start hour for interval 2
-//#define START_MINUTE_2 21   // Start minute for interval 2
-//#define STOP_HOUR_2    22  // Stop hour for interval 2
-//#define STOP_MINUTE_2  23  // Stop minute for interval 2
-
 #define START_HOUR_1   8   // Start hour for interval 1
 #define START_MINUTE_1 0   // Start minute for interval 1
 #define DURATION_1     10  // Duration in minutes for interval 1
@@ -83,10 +72,9 @@ I2C_HandleTypeDef hi2c1;
 #define START_MINUTE_2 31  // Start minute for interval 2
 #define DURATION_2     2   // Duration in minutes for interval 2
 
-// Duration in milliseconds for TIM1 activation
-//#define ACTIVE_DURATION 10 // Duration in minutes
 
-
+// Reads the registers of the of the connected RTC device
+// Connected on I2C1 SDA and SCL lines
 uint8_t ReadRTCRegister(uint8_t register_address)
 {
     uint8_t data;
@@ -99,6 +87,8 @@ uint8_t ReadRTCRegister(uint8_t register_address)
     return data;
 }
 
+
+// Reads and returns the seconds, minutes and, hours of the RTC
 void ReadRTC(uint8_t *hours, uint8_t *minutes, uint8_t *seconds)
 {
     // Read RTC registers
@@ -112,6 +102,8 @@ void ReadRTC(uint8_t *hours, uint8_t *minutes, uint8_t *seconds)
     *hours = ((reg_hours >> 4) * 10) + (reg_hours & 0x0F);
 }
 
+// Configurations of the PWM pins for the connected MOSFET
+// Connected on TIM1_CH1
 void ConfigureTIM1ForPWM(void)
 {
     TIM_OC_InitTypeDef sConfigOC = {0};
@@ -137,58 +129,7 @@ void ConfigureTIM1ForPWM(void)
 static uint8_t active_interval = 0; // 0: none, 1: interval 1, 2: interval 2
 static uint8_t timer_active = 0;
 
-//void CheckAndTriggerTimer(void)
-//{
-//    uint8_t hours, minutes, seconds;
-//    ReadRTC(&hours, &minutes, &seconds);
-//
-//    static uint8_t timer_active = 0;
-//
-//    // Determine if the current time is within any of the defined intervals
-//    uint8_t within_interval_1 = (hours > START_HOUR_1 || (hours == START_HOUR_1 && minutes >= START_MINUTE_1)) &&
-//                                (hours < STOP_HOUR_1 || (hours == STOP_HOUR_1 && minutes < STOP_MINUTE_1));
-//
-//    uint8_t within_interval_2 = (hours > START_HOUR_2 || (hours == START_HOUR_2 && minutes >= START_MINUTE_2)) &&
-//                                (hours < STOP_HOUR_2 || (hours == STOP_HOUR_2 && minutes < STOP_MINUTE_2));
-//
-//    // If within any interval and the timer is not active, start TIM1
-//    if ((within_interval_1 || within_interval_2) && !timer_active)
-//    {
-//        // Start TIM1 with full duty cycle
-//        HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); // Ensure PWM is started
-//
-//        timer_active = 1;
-//
-//        // Track which interval triggered the timer
-//        if (within_interval_1) {
-//            active_interval = 1;
-//        } else if (within_interval_2) {
-//            active_interval = 2;
-//        }
-//    }
-//
-//    if (timer_active)
-//    {
-//        // Determine if the current time has passed the stop time for the active interval
-//        uint8_t past_stop_time = 0;
-//
-//        if (active_interval == 1) {
-//            past_stop_time = (hours > STOP_HOUR_1 || (hours == STOP_HOUR_1 && minutes >= STOP_MINUTE_1));
-//        } else if (active_interval == 2) {
-//            past_stop_time = (hours > STOP_HOUR_2 || (hours == STOP_HOUR_2 && minutes >= STOP_MINUTE_2));
-//        }
-//
-//        if (past_stop_time)
-//        {
-//            // Stop TIM1 and PWM
-//            HAL_TIM_Base_Stop(&htim1);
-//            HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1); // Ensure PWM is stopped
-//
-//            timer_active = 0;
-//            active_interval = 0; // Reset active interval
-//        }
-//    }
-//}
+// Checks the time and triggers the TIM1_CH1 PWM line to trigger the stepper pump
 void CheckAndTriggerTimer(void)
 {
     uint8_t hours, minutes, seconds;
@@ -239,7 +180,7 @@ void CheckAndTriggerTimer(void)
 }
 
 
-
+// Power up function to prime the system at power failure
 void PowerUp(void)
 {
     uint8_t start_hours, start_minutes, start_seconds;
@@ -277,13 +218,13 @@ void PowerUp(void)
 
 #define RTC_ADDRESS 0x68 // I2C address of the RTC module
 
-// Function to write a single byte to a register
+// Write's a single byte to a register
 void WriteRTCRegister(uint8_t register_address, uint8_t data)
 {
     HAL_I2C_Mem_Write(&hi2c1, RTC_ADDRESS << 1, register_address, I2C_MEMADD_SIZE_8BIT, &data, 1, HAL_MAX_DELAY);
 }
 
-// Function to set the date and time
+// Set the date and time of the connected RTC
 void SetRTCDateTime(uint8_t second, uint8_t minute, uint8_t hour, uint8_t day, uint8_t date, uint8_t month, uint8_t year)
 {
     // Convert decimal to BCD (Binary-Coded Decimal)
