@@ -10,6 +10,7 @@ RTC Set-Up:
   PB6: I2C_SCL
   
   MOSFET Set-Up
+  
   PA8: TIM1_CH1
 
     
