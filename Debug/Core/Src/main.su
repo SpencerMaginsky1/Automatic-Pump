@@ -1,0 +1,14 @@
+../Core/Src/main.c:90:9:ReadRTCRegister	40	static
+../Core/Src/main.c:102:6:ReadRTC	32	static
+../Core/Src/main.c:115:6:ConfigureTIM1ForPWM	40	static
+../Core/Src/main.c:192:6:CheckAndTriggerTimer	24	static
+../Core/Src/main.c:243:6:PowerUp	24	static
+../Core/Src/main.c:281:6:WriteRTCRegister	32	static
+../Core/Src/main.c:287:6:SetRTCDateTime	32	static
+../Core/Src/main.c:314:5:main	8	static
+../Core/Src/main.c:362:6:SystemClock_Config	88	static
+../Core/Src/main.c:409:13:MX_I2C1_Init	8	static
+../Core/Src/main.c:443:13:MX_TIM1_Init	80	static
+../Core/Src/main.c:508:13:MX_USART2_UART_Init	8	static
+../Core/Src/main.c:541:13:MX_GPIO_Init	48	static
+../Core/Src/main.c:577:6:Error_Handler	4	static,ignoring_inline_asm
