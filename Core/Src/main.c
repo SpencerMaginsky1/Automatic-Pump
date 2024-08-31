@@ -215,6 +215,56 @@ void PowerUp(void)
 }
 
 
+void HandleButtonPress(void)
+{
+    static uint8_t button_pressed = 0; // Static variable to maintain state across function calls
+    static uint32_t last_press_time = 0; // Store the last button press time
+
+    if (HAL_GPIO_ReadPin(GPIOC, B1_Pin) == GPIO_PIN_RESET) {
+        // Debounce check: only register if enough time has passed since last press
+        if (HAL_GetTick() - last_press_time > 50) {
+            // Wait until the button is released
+            while (HAL_GPIO_ReadPin(GPIOC, B1_Pin) == GPIO_PIN_RESET);
+
+            // Toggle the button state
+            button_pressed = !button_pressed;
+
+            // Store the current time as the last press time
+            last_press_time = HAL_GetTick();
+
+            // If the button is pressed, enter a while loop
+            if (button_pressed) {
+                // Turn on the LED/motor
+                ConfigureTIM1ForPWM();
+                HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); // Start PWM
+
+                // Stay in this loop until the button is pressed again
+                while (button_pressed) {
+                    if (HAL_GPIO_ReadPin(GPIOC, B1_Pin) == GPIO_PIN_RESET) {
+                        // Debounce check: only register if enough time has passed since last press
+                        if (HAL_GetTick() - last_press_time > 50) {
+                            // Wait until the button is released
+                            while (HAL_GPIO_ReadPin(GPIOC, B1_Pin) == GPIO_PIN_RESET);
+
+                            // Break the loop by toggling the button state
+                            button_pressed = 0;
+
+                            // Store the current time as the last press time
+                            last_press_time = HAL_GetTick();
+
+                            // Turn off the LED/motor
+                            HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1); // Ensure PWM is stopped
+                        }
+                    }
+                    // You can add other tasks here that should run while in the loop
+                }
+            }
+        }
+    }
+}
+
+
+
 
 #define RTC_ADDRESS 0x68 // I2C address of the RTC module
 
@@ -289,6 +339,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  HandleButtonPress();
       CheckAndTriggerTimer();
       HAL_Delay(1000); // Delay to prevent excessive RTC polling
     /* USER CODE BEGIN 3 */
